@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Panel – Hybrid Analysis</title>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --card:#111827;
+  --ink:#fff;
+  --pri:#2563eb;
+  --mut:#9ca3af
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:var(--bg);
+  color:var(--ink)
+}
+.wrap{
+  max-width:420px;
+  margin:auto;
+  padding:14px
+}
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px
+}
+h3{margin:0 0 6px}
+input,select,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px
+}
+button{
+  background:var(--pri);
+  color:#fff;
+  font-weight:700
+}
+.small{
+  font-size:12px;
+  color:var(--mut)
+}
+.hr{
+  height:1px;
+  background:#020617;
+  margin:10px 0
+}
+.hidden{display:none}
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:8px;
+  background:#020617;
+  margin-right:6px;
+  margin-top:6px
+}
+.out{
+  background:#020617;
+  border-radius:12px;
+  padding:10px;
+  margin-top:10px
+}
+
+/* 🔥 FIXED NOTICE VISIBILITY (NO LOGIC CHANGE) */
+#app .small{
+  background:#020617;
+  padding:12px;
+  border-radius:12px;
+  margin-top:14px;
+  color:#e5e7eb !important;
+  line-height:1.6;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="wrap" id="login">
+  <div class="card">
+    <h3>Login</h3>
+    <input id="u" placeholder="Username">
+    <input id="p" type="password" placeholder="Password">
+    <button onclick="doLogin()">Login</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap hidden" id="app">
+  <div class="card">
+    <h3>ADMIN PANEL</h3>
+    <div class="small">User: <b>Javed Khan</b> (Trial Mode)</div>
+  </div>
+
+  <div class="card">
+    <select id="market">
+      <option>Faridabad</option>
+      <option>Gali</option>
+      <option>Disawar</option>
+    </select>
+
+    <input id="jodi" placeholder="Previous Day Jodi (00–99)">
+    <button onclick="analyze()">Analyze</button>
+
+    <div class="out" id="out"></div>
+  </div>
+
+  <!-- ⚠️ NOTICE (NOW 100% VISIBLE) -->
+  <div class="small">
+    ⚠️ <b>Educational / analytical tool only.</b><br><br>
+    Jitne bhi harupp aaye unko cut play karna hai. Wo real harup hai.  
+    Din me ek baar fail bhi ho sakta hai.<br><br>
+
+    <b>Cut Example:</b>  
+    0/5, 1/6, 2/7, 3/8, 4/9<br><br>
+
+    Agar Faridabad aur Gali me harupp 2,3,4,5 aaye hain  
+    to unhe 7,8,9,0 samjho.<br><br>
+
+    Disawar me agar harupp 7,8,9,0 aaye  
+    to ye bahar ke harupp hain – andar ke nahi.<br><br>
+
+    <b>Note:</b>  
+    Disawar me jodi kabhi cut karke  
+    aur kabhi palti karke play karni hogi.
+  </div>
+</div>
+
+<script>
+/* ---------- AUTH ---------- */
+function doLogin(){
+  if(u.value==="Javed Khan" && p.value==="sonu123"){
+    login.classList.add("hidden");
+    app.classList.remove("hidden");
+  } else {
+    alert("Invalid login");
+  }
+}
+
+/* ---------- HELPERS ---------- */
+const mirror=n=>(10-n)%10;
+const isEven=n=>n%2===0;
+
+/* ---------- MARKET WEIGHTS ---------- */
+const W={
+  Faridabad:{persist:3,mirror:2,near:2,par:1,double:1,vol:1},
+  Gali:{persist:2,mirror:3,near:2,par:1,double:2,vol:2},
+  Disawar:{persist:1,mirror:2,near:1,par:0,double:3,vol:3}
+};
+
+/* ---------- CORE ANALYSIS ---------- */
+function analyze(){
+  const v=jodi.value;
+  if(!/^\d{2}$/.test(v)){
+    alert("Enter valid jodi 00–99");
+    return;
+  }
+
+  const A=+v[0], B=+v[1];
+  const m=market.value;
+  const w=W[m];
+
+  const score=Array(10).fill(0);
+
+  score[A]+=w.persist;
+  score[mirror(A)]+=w.mirror;
+  score[(A+1)%10]+=w.near;
+  score[(A+9)%10]+=w.near;
+
+  for(let i=0;i<10;i++){
+    if(isEven(i)!==isEven(A)) score[i]+=w.par;
+  }
+
+  if(A===B){
+    score[(A+2)%10]+=w.double;
+    score[mirror(A)]+=w.double;
+  }
+
+  score[A]-=2;
+
+  const top=[...score]
+    .map((s,i)=>({i,s}))
+    .sort((a,b)=>b.s-a.s)
+    .slice(0,4)
+    .map(x=>x.i);
+
+  const jodiSets={};
+  top.forEach(h=>{
+    const opts=new Set();
+    const bases=[(B+3)%10,(B+5)%10,mirror(B),(B+7)%10];
+    for(let b of bases){
+      if(opts.size>=3) break;
+      const jd=`${h}${b}`;
+      if(jd!==v) opts.add(jd);
+    }
+    jodiSets[h]=[...opts];
+  });
+
+  let html=`<b>Market:</b> ${m}<br><b>Input Jodi:</b> ${v}`;
+  html+=`<div class="hr"></div><b>Active Andar Haruf (Top-4 | Study):</b><br>`;
+  top.forEach(h=>html+=`<span class="badge">${h}</span>`);
+
+  html+=`<div class="hr"></div><b>Candidate Jodi Sets (Study):</b>`;
+  top.forEach(h=>{
+    html+=`<br><span class="badge">${h}</span> → ${jodiSets[h].join(", ")}`;
+  });
+
+  html+=`<div class="hr"></div>
+  <div class="small">
+    Explanation: persistence + mirror + near + parity + double-impact  
+    (market weighted, repeat avoided)
+  </div>`;
+
+  out.innerHTML=html;
+}
+</script>
+
+</body>
+</html>
