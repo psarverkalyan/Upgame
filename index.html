@@ -21,11 +21,7 @@ body{
   background:var(--bg);
   color:var(--ink)
 }
-.wrap{
-  max-width:420px;
-  margin:auto;
-  padding:14px
-}
+.wrap{max-width:420px;margin:auto;padding:14px}
 .card{
   background:var(--card);
   border-radius:14px;
@@ -45,15 +41,8 @@ button{
   color:#fff;
   font-weight:700
 }
-.small{
-  font-size:12px;
-  color:var(--mut)
-}
-.hr{
-  height:1px;
-  background:#020617;
-  margin:10px 0
-}
+.small{font-size:12px;color:var(--mut)}
+.hr{height:1px;background:#020617;margin:10px 0}
 .hidden{display:none}
 .badge{
   display:inline-block;
@@ -70,7 +59,7 @@ button{
   margin-top:10px
 }
 
-/* 🔥 FIXED NOTICE VISIBILITY (NO LOGIC CHANGE) */
+/* NOTICE FIX */
 #app .small{
   background:#020617;
   padding:12px;
@@ -115,24 +104,11 @@ button{
     <div class="out" id="out"></div>
   </div>
 
-  <!-- ⚠️ NOTICE (NOW 100% VISIBLE) -->
   <div class="small">
     ⚠️ <b>Educational / analytical tool only.</b><br><br>
-    Jitne bhi harupp aaye unko cut play karna hai. Wo real harup hai.  
-    Din me ek baar fail bhi ho sakta hai.<br><br>
-
-    <b>Cut Example:</b>  
-    0/5, 1/6, 2/7, 3/8, 4/9<br><br>
-
-    Agar Faridabad aur Gali me harupp 2,3,4,5 aaye hain  
-    to unhe 7,8,9,0 samjho.Aur Ye Rule Kabhi Kabhi Apply Karna Hai Daily Nahi<br><br>
-
-    Disawar me agar harupp 7,8,9,0 aaye  
-    to ye bahar ke harupp hain – andar ke nahi.<br><br>
-
-    <b>Note:</b>  
-    Disawar me jodi kabhi cut karke  
-    aur kabhi palti karke play karni hogi.
+    Jitne bhi harupp aaye unko cut play karna hai.<br>
+    Cut example: 0/5, 1/6, 2/7, 3/8, 4/9<br><br>
+    Disawar me kabhi cut kabhi palti zaruri hai.
   </div>
 </div>
 
@@ -142,20 +118,18 @@ function doLogin(){
   if(u.value==="Javed Khan" && p.value==="sonu123"){
     login.classList.add("hidden");
     app.classList.remove("hidden");
-  } else {
-    alert("Invalid login");
-  }
+  } else alert("Invalid login");
 }
 
 /* ---------- HELPERS ---------- */
 const mirror=n=>(10-n)%10;
 const isEven=n=>n%2===0;
 
-/* ---------- MARKET WEIGHTS ---------- */
+/* ---------- MARKET WEIGHTS (TUNED) ---------- */
 const W={
   Faridabad:{persist:3,mirror:2,near:2,par:1,double:1,vol:1},
-  Gali:{persist:2,mirror:3,near:2,par:1,double:2,vol:2},
-  Disawar:{persist:1,mirror:2,near:1,par:0,double:3,vol:3}
+  Gali:{persist:1,mirror:1,near:1,par:0,double:1,vol:4},
+  Disawar:{persist:0,mirror:1,near:0,par:0,double:2,vol:5}
 };
 
 /* ---------- CORE ANALYSIS ---------- */
@@ -169,9 +143,9 @@ function analyze(){
   const A=+v[0], B=+v[1];
   const m=market.value;
   const w=W[m];
-
   const score=Array(10).fill(0);
 
+  /* base logic */
   score[A]+=w.persist;
   score[mirror(A)]+=w.mirror;
   score[(A+1)%10]+=w.near;
@@ -186,14 +160,27 @@ function analyze(){
     score[mirror(A)]+=w.double;
   }
 
+  /* repeat penalty */
   score[A]-=2;
 
+  /* CUT FAMILY BOOST */
+  const cut=(A+5)%10;
+  score[cut]+=w.vol;
+
+  /* JUMP LOGIC (REAL MARKET) */
+  if(m!=="Faridabad"){
+    score[(A+5)%10]+=2;
+    score[(A+8)%10]+=1; // -2 jump
+  }
+
+  /* top 4 */
   const top=[...score]
     .map((s,i)=>({i,s}))
     .sort((a,b)=>b.s-a.s)
     .slice(0,4)
     .map(x=>x.i);
 
+  /* jodi sets */
   const jodiSets={};
   top.forEach(h=>{
     const opts=new Set();
@@ -206,19 +193,19 @@ function analyze(){
     jodiSets[h]=[...opts];
   });
 
-  let html=`<b>Market:</b> ${m}<br><b>Input Jodi:</b> ${v}`;
-  html+=`<div class="hr"></div><b>Active Andar Haruf (Top-4 | Study):</b><br>`;
+  /* render */
+  let html=`<b>Market:</b> ${m}<br><b>Input:</b> ${v}`;
+  html+=`<div class="hr"></div><b>Active Andar (Study):</b><br>`;
   top.forEach(h=>html+=`<span class="badge">${h}</span>`);
 
-  html+=`<div class="hr"></div><b>Candidate Jodi Sets (Study):</b>`;
+  html+=`<div class="hr"></div><b>Candidate Jodi (Study):</b>`;
   top.forEach(h=>{
     html+=`<br><span class="badge">${h}</span> → ${jodiSets[h].join(", ")}`;
   });
 
   html+=`<div class="hr"></div>
   <div class="small">
-    Explanation: persistence + mirror + near + parity + double-impact  
-    (market weighted, repeat avoided)
+    Strategy: cut-family + jump + volatility (market tuned)
   </div>`;
 
   out.innerHTML=html;
