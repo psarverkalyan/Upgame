@@ -1,216 +1,85 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Panel – Hybrid Analysis</title>
+<title>Suspended</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --bg:#0f172a;
-  --card:#111827;
-  --ink:#fff;
-  --pri:#2563eb;
-  --mut:#9ca3af
-}
-*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui;
-  background:var(--bg);
-  color:var(--ink)
-}
-.wrap{max-width:420px;margin:auto;padding:14px}
-.card{
-  background:var(--card);
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:12px
-}
-h3{margin:0 0 6px}
-input,select,button{
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  margin-top:10px
-}
-button{
-  background:var(--pri);
-  color:#fff;
-  font-weight:700
-}
-.small{font-size:12px;color:var(--mut)}
-.hr{height:1px;background:#020617;margin:10px 0}
-.hidden{display:none}
-.badge{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:8px;
-  background:#020617;
-  margin-right:6px;
-  margin-top:6px
-}
-.out{
-  background:#020617;
-  border-radius:12px;
-  padding:10px;
-  margin-top:10px
+  height:100vh;
+  background:#0a0a0a;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Arial, Helvetica, sans-serif;
+  overflow:hidden;
 }
 
-/* NOTICE FIX */
-#app .small{
-  background:#020617;
-  padding:12px;
-  border-radius:12px;
-  margin-top:14px;
-  color:#e5e7eb !important;
-  line-height:1.6;
-  font-size:13px;
+/* Wrapper to center everything */
+.wrapper{
+  text-align:center;
+}
+
+/* Middle finger emoji */
+.emoji{
+  font-size:80px;
+  animation:pulse 1s infinite;
+  display:block;
+}
+
+/* Main text */
+.main-text{
+  margin-top:20px;
+  font-size:36px;
+  font-weight:900;
+  color:#ff2e2e;
+  text-transform:uppercase;
+  animation:shake 0.25s infinite;
+  text-shadow:0 0 15px red;
+}
+
+/* Sub text */
+.sub-text{
+  margin-top:12px;
+  font-size:20px;
+  letter-spacing:2px;
+  color:#ffffff;
+  opacity:0;
+  animation:fadeIn 1.5s forwards;
+  animation-delay:1s;
+}
+
+/* Animations */
+@keyframes shake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-4px)}
+  50%{transform:translateX(4px)}
+  75%{transform:translateX(-4px)}
+  100%{transform:translateX(0)}
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:translateY(0)}
+}
+
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.1)}
+  100%{transform:scale(1)}
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="wrap" id="login">
-  <div class="card">
-    <h3>Login</h3>
-    <input id="u" placeholder="Username">
-    <input id="p" type="password" placeholder="Password">
-    <button onclick="doLogin()">Login</button>
-  </div>
+<div class="wrapper">
+  <div class="emoji">🖕🏻</div>
+  <div class="main-text">PEHLI FURSAT ME NIKAL</div>
+  <div class="sub-text">YOU ARE SUSPENDED NOW</div>
 </div>
-
-<!-- APP -->
-<div class="wrap hidden" id="app">
-  <div class="card">
-    <h3>ADMIN PANEL</h3>
-    <div class="small">User: <b>Javed Khan</b> (Suspended)</div>
-  </div>
-
-  <div class="card">
-    <select id="market">
-      <option>Faridabad</option>
-      <option>Gali</option>
-      <option>Disawar</option>
-    </select>
-
-    <input id="jodi" placeholder="Previous Day Jodi (00–99)">
-    <button onclick="analyze()">Analyze</button>
-
-    <div class="out" id="out"></div>
-  </div>
-
-  <div class="small">
-    ⚠️ <b>Not Playing Random Diget Show.You Are Suspended.</b><br><br>
-    Jitne bhi harupp aaye unko cut play karna hai.<br>
-    Cut example: 0/5, 1/6, 2/7, 3/8, 4/9<br><br>
-    Disawar me kabhi cut kabhi palti zaruri hai.
-  </div>
-</div>
-
-<script>
-/* ---------- AUTH ---------- */
-function doLogin(){
-  if(u.value==="Javed Khan" && p.value==="sonu123"){
-    login.classList.add("hidden");
-    app.classList.remove("hidden");
-  } else alert("Invalid login");
-}
-
-/* ---------- HELPERS ---------- */
-const mirror=n=>(10-n)%10;
-const isEven=n=>n%2===0;
-
-/* ---------- MARKET WEIGHTS (TUNED) ---------- */
-const W={
-  Faridabad:{persist:3,mirror:2,near:2,par:1,double:1,vol:1},
-  Gali:{persist:1,mirror:1,near:1,par:0,double:1,vol:4},
-  Disawar:{persist:0,mirror:1,near:0,par:0,double:2,vol:5}
-};
-
-/* ---------- CORE ANALYSIS ---------- */
-function analyze(){
-  const v=jodi.value;
-  if(!/^\d{2}$/.test(v)){
-    alert("Enter valid jodi 00–99");
-    return;
-  }
-
-  const A=+v[0], B=+v[1];
-  const m=market.value;
-  const w=W[m];
-  const score=Array(10).fill(0);
-
-  /* base logic */
-  score[A]+=w.persist;
-  score[mirror(A)]+=w.mirror;
-  score[(A+1)%10]+=w.near;
-  score[(A+9)%10]+=w.near;
-
-  for(let i=0;i<10;i++){
-    if(isEven(i)!==isEven(A)) score[i]+=w.par;
-  }
-
-  if(A===B){
-    score[(A+2)%10]+=w.double;
-    score[mirror(A)]+=w.double;
-  }
-
-  /* repeat penalty */
-  score[A]-=2;
-
-  /* CUT FAMILY BOOST */
-  const cut=(A+5)%10;
-  score[cut]+=w.vol;
-
-  /* JUMP LOGIC (REAL MARKET) */
-  if(m!=="Faridabad"){
-    score[(A+5)%10]+=2;
-    score[(A+8)%10]+=1; // -2 jump
-  }
-
-  /* top 4 */
-  const top=[...score]
-    .map((s,i)=>({i,s}))
-    .sort((a,b)=>b.s-a.s)
-    .slice(0,4)
-    .map(x=>x.i);
-
-  /* jodi sets */
-  const jodiSets={};
-  top.forEach(h=>{
-    const opts=new Set();
-    const bases=[(B+3)%10,(B+5)%10,mirror(B),(B+7)%10];
-    for(let b of bases){
-      if(opts.size>=3) break;
-      const jd=`${h}${b}`;
-      if(jd!==v) opts.add(jd);
-    }
-    jodiSets[h]=[...opts];
-  });
-
-  /* render */
-  let html=`<b>Market:</b> ${m}<br><b>Input:</b> ${v}`;
-  html+=`<div class="hr"></div><b>Active Andar (Study):</b><br>`;
-  top.forEach(h=>html+=`<span class="badge">${h}</span>`);
-
-  html+=`<div class="hr"></div><b>Candidate Jodi (Study):</b>`;
-  top.forEach(h=>{
-    html+=`<br><span class="badge">${h}</span> → ${jodiSets[h].join(", ")}`;
-  });
-
-  html+=`<div class="hr"></div>
-  <div class="small">
-    Strategy: cut-family + jump + volatility (market tuned)
-  </div>`;
-
-  out.innerHTML=html;
-}
-</script>
 
 </body>
 </html>
